@@ -6,7 +6,7 @@ Information from betting markets can tell us how well top analysts predict event
 Mixed martial arts (MMA) was selected as the sport for RNN to predict, as each fight can be modeled as a two-player game, resulting in a win or loss. The sport was chosen for its simple format and the following meaningful challenges:
 
 * *Tree of events*: The strength of each fighter is determined by each one of their previous fights, and the strength of each previous opponent. This has the effect of requiring the model to understand the full tree-shaped network of event history. 
-* *One-on-one matchups*: The strength of each fighter is not a singular metric, but it also can represented as strengths or weakness against certain other fighter types (like rock-paper-scissors). This contrasts with sports like horse racing, swimming, or track & field. 
+* *One-on-one matchups*: The strength of each fighter is not a singular metric, but it also can represented as strengths or weakness against certain other fighter types. This contrasts with sports like horse racing, swimming, or track & field. 
 * *Modest training data*: The entire set of recorded professional mixed martial arts fights numbers 294,000, with most missing auxiliary information. 
 * *High variance*: For meaningful predictions, there needs to be a metric on the reliability, staleness, or variability of a metric, not just the metric itself. This also requires the model to generalize well. 
 
@@ -23,7 +23,7 @@ The performance of RNN can be compared to existing mathematical frameworks and b
 The above diagram details the structure of one unit of the RNN. One unit represents one fight between two fighters. The RNN units are connected to each other through the fighter strength vector (one unit’s output strength vector is another unit’s input strength vector). 
 
 ### Fighter strength vector
-Each fighter’s strength was , with 8 being a hyper-parameter. 
+Each fighter’s strength is described as a vector. The vector is initialized as zeroes, and during training, the model decides what values to place at which locations in the vector, based on predictive ability. The strength vectors are then updated after each fight, with the winning and losing fighter each receiving certain updates. 
 ### Fight input data
 Information about the fight that we know before the fight begins - this includes:
 * *Numerical traits*: fighter weight, height, age, time since last fight.
@@ -33,7 +33,7 @@ Information about the fight that we know before the fight begins - this includes
 Information about the result of a fight. This data is used to augment the fighter strength vectors after each fight, but not used to predict the outcome of the fight.
 * *Traits*: outcome(win, loss), end round, method of victory, closing odds, significant strikes, fight statistics.
 ### Symmetry
-The model does have a built-in concept of symmetry, where the layer nodes are mirrored between fighters A and B, and each fight is trained along with its mirror image. Other than symmetry, the model does not have knowledge of the space - all strength vectors are initialized with zeroes, and all layer nodes are initialized randomly. 
+The model does have a built-in concept of symmetry, where the layer nodes are mirrored between fighters A and B, and each fight is trained along with its mirror image. Other than symmetry, the model does not have knowledge of the space - all layer nodes are initialized randomly. 
 ### Training
 Training was performed using `tensorflow 1.11.0` on an iMac Pro. The optimizer’s loss function was mean-squared error between the prediction and actual result. The model trained on the data set repeatedly, with the  learning rate decreasing over time. 
 
@@ -43,8 +43,15 @@ The resulting error (loss) of RNN, as measured by mean-squared error, is 0.2114,
 The training data comprised the first 80% of the fight history, and the above are results from the separate validation set. 
 
 ## Concepts
-Training was done with the [AdamOptimizer](https://www.tensorflow.org/api_docs/python/tf/train/AdamOptimizer). 
-
+* [Adam Optimizer](https://www.tensorflow.org/api_docs/python/tf/train/AdamOptimizer)
+* [Dense layer](https://www.tensorflow.org/api_docs/python/tf/layers/Dense)
+* [Sigmoid](https://www.tensorflow.org/api_docs/python/tf/math/sigmoid)
+* [Relu](https://www.tensorflow.org/api_docs/python/tf/nn/relu)
+* [Dropout](https://www.tensorflow.org/api_docs/python/tf/layers/Dropout)
+* [Loss (mean squared error)](https://www.tensorflow.org/api_docs/python/tf/losses/mean_squared_error)
+* [Feature column](https://www.tensorflow.org/api_docs/python/tf/feature_column/numeric_column)
+* [RNN cell](https://www.tensorflow.org/api_docs/python/tf/nn/rnn_cell/BasicRNNCell)
+* [LSTM cell](https://www.tensorflow.org/api_docs/python/tf/nn/rnn_cell/BasicLSTMCell)
 
 ### Other technical challenges
 * One primary challenge was speeding up the training time on the intertwined events. Since Tensorflow performs batches quickly, it was important to batch together the training of fights that were independent of each other. Therefore each batch corresponded to a level in the fight history tree. Doing this improved the training time by 20x. 
